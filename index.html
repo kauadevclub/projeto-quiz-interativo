@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        .option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .option.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .option.correct {
+            border-color: #10b981;
+            background-color: #ecfdf5;
+        }
+        .option.wrong {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .timer-ring {
+            transition: stroke-dashoffset 1s linear;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+    <div id="app" class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Home Screen -->
+        <div id="home-screen" class="text-center" data-aos="fade-in">
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h1 class="text-4xl font-bold text-blue-600 mb-4">Professional Quiz</h1>
+                <p class="text-gray-600 mb-8">Test your knowledge with our interactive quiz!</p>
+                <div class="mb-6">
+                    <input type="text" id="player-name" placeholder="Enter your name" class="px-4 py-2 border rounded-lg w-full max-w-xs">
+                </div>
+                <button id="start-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105">
+                    Start Quiz <i data-feather="play" class="ml-2"></i>
+                </button>
+                <button id="view-ranking-btn" class="mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg transition-all">
+                    View Ranking <i data-feather="award" class="ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+                <!-- Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex items-center">
+                        <span class="font-bold text-blue-600 mr-2">Score:</span>
+                        <span id="score" class="text-xl font-bold">0</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="font-bold text-gray-600 mr-2">Time:</span>
+                        <div class="relative w-10 h-10">
+                            <svg class="w-full h-full" viewBox="0 0 36 36">
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="#e6e6e6" stroke-width="2"></circle>
+                                <circle id="timer-circle" cx="18" cy="18" r="16" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="100" stroke-dashoffset="0" class="timer-ring" transform="rotate(-90 18 18)"></circle>
+                            </svg>
+                            <span id="timer" class="absolute inset-0 flex items-center justify-center text-sm font-bold">30</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                    <div id="progress-bar" class="progress-bar bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+
+                <!-- Question -->
+                <div id="question-container" class="mb-8">
+                    <h2 id="question" class="text-xl md:text-2xl font-bold text-gray-800 mb-6"></h2>
+                    <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="flex justify-between">
+                    <button id="quit-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg">
+                        Quit <i data-feather="x" class="ml-2"></i>
+                    </button>
+                    <button id="next-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg hidden">
+                        Next <i data-feather="arrow-right" class="ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="hidden text-center">
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h2 class="text-3xl font-bold text-blue-600 mb-4">Quiz Completed!</h2>
+                <div id="result-message" class="text-xl font-semibold mb-6"></div>
+                <div class="bg-blue-50 rounded-lg p-6 mb-8 inline-block">
+                    <div class="text-5xl font-bold text-blue-600 mb-2" id="final-score">0</div>
+                    <div class="text-gray-600">Your Score</div>
+                </div>
+                <div class="flex justify-center gap-4">
+                    <button id="restart-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
+                        Restart Quiz <i data-feather="refresh-cw" class="ml-2"></i>
+                    </button>
+                    <button id="home-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg">
+                        Home <i data-feather="home" class="ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ranking Screen -->
+        <div id="ranking-screen" class="hidden">
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h2 class="text-3xl font-bold text-blue-600 mb-6 text-center">Top Players</h2>
+                <div id="ranking-list" class="space-y-4">
+                    <!-- Ranking items will be inserted here -->
+                </div>
+                <div class="mt-8 text-center">
+                    <button id="back-to-home-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
+                        Back to Home <i data-feather="home" class="ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize animations and icons
+        AOS.init();
+        feather.replace();
+
+        // Quiz data
+        const quizData = [
+            {
+                question: "What is the capital of France?",
+                options: ["London", "Berlin", "Paris", "Madrid"],
+                correctAnswer: 2
+            },
+            {
+                question: "Which planet is known as the Red Planet?",
+                options: ["Venus", "Mars", "Jupiter", "Saturn"],
+                correctAnswer: 1
+            },
+            {
+                question: "What is the largest mammal?",
+                options: ["Elephant", "Blue Whale", "Giraffe", "Polar Bear"],
+                correctAnswer: 1
+            },
+            {
+                question: "Which language runs in a web browser?",
+                options: ["Java", "C", "Python", "JavaScript"],
+                correctAnswer: 3
+            },
+            {
+                question: "What year was JavaScript launched?",
+                options: ["1990", "1995", "2000", "2005"],
+                correctAnswer: 1
+            }
+        ];
+
+        // Quiz state
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timer;
+        let timeLeft = 30;
+        let playerName = "";
+        let selectedOptionIndex = null;
+        let answerSubmitted = false;
+
+        // DOM elements
+        const homeScreen = document.getElementById('home-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const rankingScreen = document.getElementById('ranking-screen');
+        const startBtn = document.getElementById('start-btn');
+        const viewRankingBtn = document.getElementById('view-ranking-btn');
+        const playerNameInput = document.getElementById('player-name');
+        const questionElement = document.getElementById('question');
+        const optionsContainer = document.getElementById('options');
+        const scoreElement = document.getElementById('score');
+        const nextBtn = document.getElementById('next-btn');
+        const quitBtn = document.getElementById('quit-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const timerElement = document.getElementById('timer');
+        const timerCircle = document.getElementById('timer-circle');
+        const finalScoreElement = document.getElementById('final-score');
+        const resultMessageElement = document.getElementById('result-message');
+        const restartBtn = document.getElementById('restart-btn');
+        const homeBtn = document.getElementById('home-btn');
+        const backToHomeBtn = document.getElementById('back-to-home-btn');
+        const rankingList = document.getElementById('ranking-list');
+
+        // Event listeners
+        startBtn.addEventListener('click', startQuiz);
+        viewRankingBtn.addEventListener('click', showRanking);
+        nextBtn.addEventListener('click', nextQuestion);
+        quitBtn.addEventListener('click', quitQuiz);
+        restartBtn.addEventListener('click', restartQuiz);
+        homeBtn.addEventListener('click', goHome);
+        backToHomeBtn.addEventListener('click', goHome);
+
+        // Start quiz
+        function startQuiz() {
+            playerName = playerNameInput.value.trim();
+            if (!playerName) {
+                alert("Please enter your name to start the quiz!");
+                return;
+            }
+
+            currentQuestionIndex = 0;
+            score = 0;
+            scoreElement.textContent = score;
+            
+            homeScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            resultsScreen.classList.add('hidden');
+            rankingScreen.classList.add('hidden');
+            
+            loadQuestion();
+        }
+
+        // Load question
+        function loadQuestion() {
+            answerSubmitted = false;
+            selectedOptionIndex = null;
+            nextBtn.classList.add('hidden');
+            
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionElement.textContent = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            
+            // Update progress bar
+            const progress = ((currentQuestionIndex) / quizData.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            
+            // Clear previous options
+            optionsContainer.innerHTML = '';
+            
+            // Create new options
+            currentQuestion.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option p-4 border-2 border-gray-200 rounded-lg cursor-pointer transition-all';
+                optionElement.textContent = option;
+                optionElement.addEventListener('click', () => selectOption(index));
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            // Reset timer
+            resetTimer();
+        }
+
+        // Select option
+        function selectOption(index) {
+            if (answerSubmitted) return;
+            
+            // Remove selected class from all options
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => option.classList.remove('selected'));
+            
+            // Add selected class to clicked option
+            options[index].classList.add('selected');
+            selectedOptionIndex = index;
+        }
+
+        // Submit answer
+        function submitAnswer() {
+            if (selectedOptionIndex === null || answerSubmitted) return;
+            
+            answerSubmitted = true;
+            clearInterval(timer);
+            
+            const currentQuestion = quizData[currentQuestionIndex];
+            const options = document.querySelectorAll('.option');
+            
+            // Mark correct and wrong answers
+            options[currentQuestion.correctAnswer].classList.add('correct');
+            if (selectedOptionIndex !== currentQuestion.correctAnswer) {
+                options[selectedOptionIndex].classList.add('wrong');
+            }
+            
+            // Update score if correct
+            if (selectedOptionIndex === currentQuestion.correctAnswer) {
+                score += 10;
+                scoreElement.textContent = score;
+            }
+            
+            // Show next button
+            nextBtn.classList.remove('hidden');
+        }
+
+        // Next question
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        // Show results
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            
+            finalScoreElement.textContent = score;
+            
+            // Determine result message
+            let message = "";
+            const percentage = (score / (quizData.length * 10)) * 100;
+            
+            if (percentage >= 80) {
+                message = "🎉 Excellent! You're a quiz master!";
+            } else if (percentage >= 60) {
+                message = "👍 Good job! You know your stuff!";
+            } else if (percentage >= 40) {
+                message = "😊 Not bad! Keep learning!";
+            } else {
+                message = "📚 Keep practicing! You'll get better!";
+            }
+            
+            resultMessageElement.textContent = message;
+            
+            // Save score to localStorage
+            saveScore();
+        }
+
+        // Save score
+        function saveScore() {
+            const scores = JSON.parse(localStorage.getItem('quizScores')) || [];
+            scores.push({
+                name: playerName,
+                score: score,
+                date: new Date().toISOString()
+            });
+            
+            // Sort by score (descending)
+            scores.sort((a, b) => b.score - a.score);
+            
+            // Keep only top 10 scores
+            const topScores = scores.slice(0, 10);
+            
+            localStorage.setItem('quizScores', JSON.stringify(topScores));
+        }
+
+        // Show ranking
+        function showRanking() {
+            homeScreen.classList.add('hidden');
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            rankingScreen.classList.remove('hidden');
+            
+            // Load scores from localStorage
+            const scores = JSON.parse(localStorage.getItem('quizScores')) || [];
+            
+            // Clear ranking list
+            rankingList.innerHTML = '';
+            
+            if (scores.length === 0) {
+                rankingList.innerHTML = '<p class="text-gray-600">No scores yet. Be the first to play!</p>';
+                return;
+            }
+            
+            // Add scores to ranking list
+            scores.forEach((score, index) => {
+                const rankItem = document.createElement('div');
+                rankItem.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-lg';
+                
+                const rankInfo = document.createElement('div');
+                rankInfo.className = 'flex items-center';
+                
+                const rankNumber = document.createElement('div');
+                rankNumber.className = 'w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-600 font-bold rounded-full mr-4';
+                rankNumber.textContent = index + 1;
+                
+                const playerName = document.createElement('div');
+                playerName.className = 'font-semibold';
+                playerName.textContent = score.name;
+                
+                rankInfo.appendChild(rankNumber);
+                rankInfo.appendChild(playerName);
+                
+                const playerScore = document.createElement('div');
+                playerScore.className = 'font-bold text-blue-600';
+                playerScore.textContent = score.score;
+                
+                rankItem.appendChild(rankInfo);
+                rankItem.appendChild(playerScore);
+                
+                rankingList.appendChild(rankItem);
+            });
+        }
+
+        // Reset timer
+        function resetTimer() {
+            clearInterval(timer);
+            timeLeft = 30;
+            timerElement.textContent = timeLeft;
+            timerCircle.style.strokeDashoffset = 0;
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = timeLeft;
+                
+                // Update timer circle
+                const offset = 100 - (timeLeft / 30 * 100);
+                timerCircle.style.strokeDashoffset = offset;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    submitAnswer();
+                }
+            }, 1000);
+        }
+
+        // Quit quiz
+        function quitQuiz() {
+            if (confirm("Are you sure you want to quit the quiz?")) {
+                quizScreen.classList.add('hidden');
+                homeScreen.classList.remove('hidden');
+                clearInterval(timer);
+            }
+        }
+
+        // Restart quiz
+        function restartQuiz() {
+            resultsScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            currentQuestionIndex = 0;
+            score = 0;
+            scoreElement.textContent = score;
+            loadQuestion();
+        }
+
+        // Go home
+        function goHome() {
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            rankingScreen.classList.add('hidden');
+            homeScreen.classList.remove('hidden');
+            clearInterval(timer);
+        }
+
+        // Auto submit when time runs out
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('option') && !answerSubmitted) {
+                submitAnswer();
+            }
+        });
+    </script>
+</body>
+</html>
