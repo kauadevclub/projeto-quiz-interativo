@@ -1,4 +1,5 @@
 # 🧠 Quiz Interativo do Kauã
+https://projetopessoalquizinterativo.netlify.app/
 
 Um quiz interativo e divertido desenvolvido com **HTML, CSS e JavaScript**, que testa conhecimentos em diversas áreas.  
 Projeto criado para prática de lógica, manipulação do DOM e experiência do usuário.  
